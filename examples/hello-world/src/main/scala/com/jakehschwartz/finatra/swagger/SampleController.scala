@@ -86,6 +86,8 @@ class SampleController @Inject()(implicit val openAPI: OpenAPI) extends SwaggerC
     o.summary("Update the student")
       .addTagsItem("Student")
       .pathParam[String]("id", "student ID")
+      .formParam[String]("name", "the student name")
+      .formParam[Int]("grade", "the student grade")
       .cookieParam[String]("who", "who make the update")
       .headerParam[String]("token", "the token")
       .responseWith(200, "the student is updated")

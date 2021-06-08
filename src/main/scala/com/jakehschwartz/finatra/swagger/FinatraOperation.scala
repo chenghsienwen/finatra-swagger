@@ -1,14 +1,14 @@
 package com.jakehschwartz.finatra.swagger
 
 import io.swagger.v3.oas.models._
-import io.swagger.v3.oas.models.media.{Content, MediaType}
+import io.swagger.v3.oas.models.media.{Content, MediaType, ObjectSchema, Schema}
 import io.swagger.v3.oas.models.parameters._
 import io.swagger.v3.oas.models.responses.{ApiResponse, ApiResponses}
 import io.swagger.v3.oas.models.security.SecurityRequirement
 
 import scala.jdk.CollectionConverters._
 import scala.reflect.runtime.universe._
-
+import scala.util.Try
 object FinatraOperation {
   implicit def convert(operation: Operation): FinatraOperation = new FinatraOperation(operation)
 }
@@ -80,6 +80,22 @@ class FinatraOperation(operation: Operation) {
     val reqBody = new RequestBody()
       .content(content)
       .description(description)
+    operation.requestBody(reqBody)
+
+    operation
+  }
+
+  def formParam[T: TypeTag](name: String, description: String = "")
+                           (implicit openAPI: OpenAPI): Operation = {
+    val propertiesItem = new Schema[T]()
+    val media = Try(operation.getRequestBody.getContent.get("multipart/form-data")).getOrElse(new MediaType())
+    val schema = Try(Option(media.getSchema)).toOption.flatten.getOrElse(new ObjectSchema())
+
+    val content = new Content
+    content.addMediaType("multipart/form-data", media.schema(schema.addProperties(name, propertiesItem.description(description))))
+
+    val reqBody = new RequestBody()
+      .content(content)
     operation.requestBody(reqBody)
 
     operation
